@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0c0d10" />
+    <title>RT Studio — Image to 3D</title>
+  </head>
+  <body>
+    <div id="app">
+      <aside class="sidebar" id="sidebar">
+        <a class="brand" href="#home" aria-label="RT Studio home"><span class="brand-mark">rt<span>.</span></span><span class="brand-name">STUDIO<small>3D WORKSPACE</small></span></a>
+        <div class="workspace-switch"><span class="workspace-icon">R</span><span>Personal workspace<small>Student plan</small></span><span class="chevron">⌄</span></div>
+        <div class="nav-label">WORKSPACE</div>
+        <nav class="nav-list" aria-label="Main navigation">
+          <button class="nav-item active" data-nav="Home"><span class="nav-icon">⌂</span><span>Home</span><kbd>⌘ 1</kbd></button>
+          <button class="nav-item" data-nav="Files"><span class="nav-icon">▤</span><span>Files</span><i class="nav-count">1</i></button>
+          <button class="nav-item" data-nav="My Models"><span class="nav-icon">⬡</span><span>My Models</span></button>
+          <button class="nav-item" data-nav="History"><span class="nav-icon">◷</span><span>Generation history</span></button>
+        </nav>
+        <div class="nav-label nav-label-spaced">PREFERENCES</div>
+        <nav class="nav-list" aria-label="Preferences">
+          <button class="nav-item" data-nav="Settings"><span class="nav-icon">⚙</span><span>Settings</span></button>
+          <button class="nav-item" data-nav="About"><span class="nav-icon">ⓘ</span><span>About RT Studio</span></button>
+        </nav>
+        <div class="sidebar-bottom">
+          <div class="credits-card"><div class="credits-top"><span>AI generation</span><span id="ai-state">Checking</span></div><div class="credit-track"><span id="ai-state-bar"></span></div><small id="ai-state-help">Checking Rust server configuration</small></div>
+          <button class="profile-button" id="profile-button"><span class="avatar">S</span><span>Student account<small>Local session</small></span><span class="more">···</span></button>
+        </div>
+      </aside>
+      <main class="app-main">
+        <header class="topbar">
+          <div class="breadcrumb"><button class="sidebar-toggle" id="sidebar-toggle" aria-label="Collapse sidebar">☰</button><span>Workspace</span><span class="crumb-slash">/</span><strong id="page-title">Home</strong></div>
+          <div class="topbar-actions"><span class="server-state"><i></i><span id="server-label">Checking local server</span></span><button class="icon-button" id="help-button" title="About RT Studio">?</button><span class="top-avatar">S</span></div>
+        </header>
+        <div class="content-shell">
+          <section class="workspace-main">
+            <div class="welcome-row"><div><div class="eyebrow"><span class="eyebrow-dot"></span> IMAGE TO 3D WORKSPACE</div><h1>Turn an image into <span>dimension.</span></h1><p class="subtitle">Create a 3D starting point, tune your scene, and render it with Rust.</p></div><button class="text-button" id="new-project"><span>＋</span> New project</button></div>
+            <section class="viewer-card" aria-label="3D model viewer">
+              <div class="viewer-top"><div class="viewer-title"><span class="live-dot"></span><strong id="model-label">Primitive sample scene</strong><span class="viewer-badge" id="model-badge">DEMO</span></div><div class="viewer-actions"><button class="viewer-icon" id="grid-toggle" title="Toggle grid">▦</button><button class="viewer-icon" id="axes-toggle" title="Toggle axes">⌖</button><button class="viewer-icon" id="reset-camera" title="Reset camera">↺</button><span class="viewer-divider"></span><button class="viewer-icon" id="fullscreen" title="Fullscreen">⛶</button></div></div>
+              <div class="viewer-stage" id="viewer-stage"><canvas id="viewport"></canvas><div class="view-corner">PERSPECTIVE <span>·</span> SOLID</div><div class="axis-widget"><span class="axis-y">Y</span><span class="axis-x">X</span><span class="axis-z">Z</span><i></i></div><div class="loading-overlay hidden" id="loading-overlay"><div class="spinner"></div><strong id="loading-title">Preparing model</strong><span id="loading-detail">Please wait…</span><div class="progress-track"><i id="progress-fill"></i></div></div></div>
+              <div class="viewer-footer"><div class="footer-hint"><span class="mouse-symbol">⌖</span> Drag to orbit <span class="hint-dot">·</span> Scroll to zoom</div><div class="view-coords"><span>WORLD</span><b>X</b> 0.00 <b>Y</b> 0.00 <b>Z</b> 0.00</div></div>
+            </section>
+            <div class="lower-grid">
+              <section class="upload-card" id="upload-card"><div class="section-heading"><div><span class="step-number">01</span><strong>Source image</strong></div><span class="file-support">JPG · PNG · UP TO 10 MB</span></div><div class="drop-zone" id="drop-zone"><input id="image-input" type="file" accept="image/jpeg,image/png,.jpg,.jpeg,.png" hidden /><div class="image-preview hidden" id="image-preview-wrap"><img id="image-preview" alt="Selected image preview" /><button class="remove-image" id="remove-image" aria-label="Remove image">×</button></div><div class="upload-placeholder" id="upload-placeholder"><span class="upload-icon">↑</span><div><strong>Drop an image here</strong><span>or <button class="inline-link" id="choose-file">browse files</button></span></div></div></div><div class="upload-actions"><span class="upload-status" id="upload-status">A single clear view works best</span><button class="primary-button" id="generate-button" disabled><span class="sparkle">✦</span> Create 3D model</button></div></section>
+              <section class="render-card"><div class="section-heading"><div><span class="step-number step-purple">02</span><strong>Ray tracer</strong></div><span class="rust-chip"><i></i> RUST ENGINE</span></div><p class="render-copy">Render one of the built-in primitive scenes with your own ray tracer.</p><label class="field-label" for="render-scene">Scene</label><select id="render-scene" class="select-field"><option value="0">01 — Single sphere</option><option value="1">02 — Cube and plane</option><option value="2">03 — Primitive set</option><option value="3">04 — Alternate camera</option></select><button class="secondary-button render-button" id="render-button"><span>◉</span> Render 800 × 600 PPM</button><div class="render-status" id="render-status">Output: P3 Portable Pixmap</div></section>
+            </div>
+            <footer class="workspace-foot"><span>RT STUDIO <b>0.1</b></span><span>Built for learning · Rust ray tracing</span><span class="foot-right">LOCAL WORKSPACE <i></i></span></footer>
+          </section>
+          <aside class="inspector">
+            <div class="inspector-head"><div><span class="eyebrow">SCENE INSPECTOR</span><h2>Properties</h2></div><button class="viewer-icon" id="reset-properties" title="Reset properties">↺</button></div>
+            <div class="inspector-object"><span class="object-thumb">⬡</span><span><strong id="inspector-model-name">Primitive sample</strong><small>Mesh object · <span id="object-state">Demo</span></small></span><button class="object-more" id="object-more">···</button></div>
+            <div class="inspector-tabs" role="tablist"><button class="inspector-tab active" data-tab="object">Object</button><button class="inspector-tab" data-tab="lighting">Lighting</button><button class="inspector-tab" data-tab="material">Material</button><button class="inspector-tab" data-tab="camera">Camera</button></div>
+            <div class="properties-content" id="panel-object" data-panel="object">
+              <div class="property-section"><div class="property-title"><span>Transform</span><button class="tiny-reset" data-reset="transform">Reset</button></div><div class="vector-row"><label>Position</label><div class="xyz-fields"><label><i>X</i><input data-transform="position.x" type="number" value="0" step="0.1"></label><label><i>Y</i><input data-transform="position.y" type="number" value="0" step="0.1"></label><label><i>Z</i><input data-transform="position.z" type="number" value="0" step="0.1"></label></div></div><div class="vector-row"><label>Rotation</label><div class="xyz-fields"><label><i>X</i><input data-transform="rotation.x" type="number" value="0" step="5"></label><label><i>Y</i><input data-transform="rotation.y" type="number" value="0" step="5"></label><label><i>Z</i><input data-transform="rotation.z" type="number" value="0" step="5"></label></div></div><div class="vector-row"><label>Scale</label><div class="xyz-fields"><label><i>X</i><input data-transform="scale.x" type="number" value="1" step="0.1" min="0.01"></label><label><i>Y</i><input data-transform="scale.y" type="number" value="1" step="0.1" min="0.01"></label><label><i>Z</i><input data-transform="scale.z" type="number" value="1" step="0.1" min="0.01"></label></div></div></div>
+              <div class="property-section"><div class="property-title"><span>Display</span></div><label class="toggle-row"><span>Show grid</span><input type="checkbox" id="show-grid" checked><i></i></label><label class="toggle-row"><span>Show axes</span><input type="checkbox" id="show-axes" checked><i></i></label></div>
+            </div>
+            <div class="properties-content hidden" id="panel-lighting" data-panel="lighting"><div class="property-section"><div class="property-title"><span>Key light</span><span class="on-label"><i></i> ON</span></div><label class="toggle-row"><span>Enable light</span><input type="checkbox" id="light-enabled" checked><i></i></label><div class="range-row"><label for="light-intensity">Intensity <output id="light-value">1.2</output></label><input type="range" id="light-intensity" min="0" max="3" step="0.1" value="1.2"></div><div class="property-title sub-title"><span>Position</span></div><div class="xyz-fields lighting-fields"><label><i>X</i><input data-light="x" type="number" value="-3" step="0.5"></label><label><i>Y</i><input data-light="y" type="number" value="5" step="0.5"></label><label><i>Z</i><input data-light="z" type="number" value="-4" step="0.5"></label></div><div class="color-row"><label for="light-color">Light color</label><input id="light-color" type="color" value="#fff1d9"></div><div class="range-row"><label for="ambient-light">Ambient <output id="ambient-value">0.20</output></label><input type="range" id="ambient-light" min="0" max="0.8" step="0.05" value="0.2"></div><div class="property-note">These controls affect the interactive preview. The Rust scenes use their own documented light setup.</div></div></div>
+            <div class="properties-content hidden" id="panel-material" data-panel="material"><div class="property-section"><div class="property-title"><span>Surface</span><span class="material-dot"></span></div><div class="color-row"><label for="material-color">Base color</label><input id="material-color" type="color" value="#6285d8"></div><div class="range-row"><label for="roughness">Roughness <output id="roughness-value">0.48</output></label><input type="range" id="roughness" min="0" max="1" step="0.01" value="0.48"></div><div class="range-row"><label for="metalness">Metalness <output id="metalness-value">0.12</output></label><input type="range" id="metalness" min="0" max="1" step="0.01" value="0.12"></div><div class="property-note">Material edits are applied to the current preview mesh. Generated texture maps may change its appearance.</div></div></div>
+            <div class="properties-content hidden" id="panel-camera" data-panel="camera"><div class="property-section"><div class="property-title"><span>Perspective camera</span><button class="tiny-reset" id="camera-reset-inline">Reset</button></div><div class="range-row"><label for="fov">Field of view <output id="fov-value">48°</output></label><input type="range" id="fov" min="25" max="90" step="1" value="48"></div><div class="camera-controls"><button class="secondary-button" id="camera-home">⌖ &nbsp;Frame model</button><button class="secondary-button" id="camera-reset">↺ &nbsp;Reset view</button></div><div class="property-note">Orbit with the left mouse button. Pan with the right mouse button or Shift + drag.</div></div></div>
+            <div class="inspector-bottom"><span class="inspector-help">Need a hand?</span><button id="docs-button">Read the project guide <span>↗</span></button></div>
+          </aside>
+        </div>
+      </main>
+      <div class="toast" id="toast" role="status"></div>
+      <dialog id="about-dialog" class="about-dialog"><button class="dialog-close" id="close-dialog">×</button><div class="dialog-brand">rt<span>.</span></div><h2>RT Studio</h2><p>A student project joining local image-to-3D generation, browser-based model editing, and a ray tracer written in Rust.</p><div class="about-points"><div><b>AI</b><span>Local TripoSR model</span></div><div><b>VIEW</b><span>Three.js GLB preview</span></div><div><b>RENDER</b><span>Custom Lambert ray tracer</span></div></div><p class="dialog-note">One photo gives an approximate model; hidden sides cannot be recovered exactly. The ray tracer currently renders its four built-in primitive scenes.</p></dialog>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
