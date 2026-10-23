@@ -1,9 +1,11 @@
+pub mod auth;
 pub mod generation;
 pub mod upload;
 
 use axum::{
     Json, Router,
     extract::DefaultBodyLimit,
+    middleware,
     routing::{get, post},
 };
 use serde::Serialize;
@@ -24,8 +26,7 @@ async fn health() -> Json<Health> {
 }
 
 pub async fn serve() -> Result<(), Box<dyn std::error::Error>> {
-    let app = Router::new()
-        .route("/api/health", get(health))
+    let protected = Router::new()
         .route(
             "/api/upload",
             post(upload::upload_image).layer(DefaultBodyLimit::max(11 * 1024 * 1024)),
@@ -37,6 +38,14 @@ pub async fn serve() -> Result<(), Box<dyn std::error::Error>> {
             get(generation::download_model),
         )
         .route("/api/render", post(render_ppm))
+        .route_layer(middleware::from_fn(auth::require_session));
+    let app = Router::new()
+        .route("/api/health", get(health))
+        .route("/api/auth/register", post(auth::register))
+        .route("/api/auth/login", post(auth::login))
+        .route("/api/auth/session", get(auth::current))
+        .route("/api/auth/logout", post(auth::logout))
+        .merge(protected)
         .nest_service("/docs", ServeDir::new("docs"))
         .fallback_service(ServeDir::new("frontend/dist").append_index_html_on_directories(true));
     let address = SocketAddr::from(([127, 0, 0, 1], 3000));

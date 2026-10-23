@@ -152,6 +152,9 @@ pub async fn create_generation(Json(request): Json<CreateRequest>) -> Response {
     let compatibility_modules = std::env::current_dir()
         .unwrap_or_else(|_| PathBuf::from("."))
         .join("ai/triposr_compat");
+    let texture_embedder = std::env::current_dir()
+        .unwrap_or_else(|_| PathBuf::from("."))
+        .join("ai/embed_texture.py");
     let task_id = id.clone();
     tokio::spawn(async move {
         update_task(&task_id, "RUNNING", 5, None, None).await;
@@ -163,9 +166,12 @@ pub async fn create_generation(Json(request): Json<CreateRequest>) -> Response {
             .arg("--device")
             .arg(device)
             .arg("--model-save-format")
-            .arg("glb")
+            .arg("obj")
             .arg("--mc-resolution")
-            .arg("128")
+            .arg("192")
+            .arg("--bake-texture")
+            .arg("--texture-resolution")
+            .arg("2048")
             .current_dir(model_root)
             .env("PYTHONPATH", compatibility_modules)
             .stdin(Stdio::null())
@@ -174,25 +180,54 @@ pub async fn create_generation(Json(request): Json<CreateRequest>) -> Response {
 
         match result {
             Ok(output) if output.status.success() => {
+                let obj = output_dir.join("0/mesh.obj");
+                let texture = output_dir.join("0/texture.png");
                 let model = output_dir.join("0/mesh.glb");
-                if model.is_file() {
-                    update_task(
-                        &task_id,
-                        "SUCCEEDED",
-                        100,
-                        Some(format!("/api/generation/{task_id}/model")),
-                        None,
-                    )
-                    .await;
-                } else {
+                if !obj.is_file() || !texture.is_file() {
                     update_task(
                         &task_id,
                         "FAILED",
                         0,
                         None,
-                        Some("TripoSR завершил работу, но файл GLB не найден".to_string()),
+                        Some("TripoSR завершил работу, но OBJ или текстура не найдены".to_string()),
                     )
                     .await;
+                } else {
+                    let embedded = Command::new(python_executable())
+                        .arg(texture_embedder)
+                        .arg(&obj)
+                        .arg(&texture)
+                        .arg(&model)
+                        .stdin(Stdio::null())
+                        .output()
+                        .await;
+                    match embedded {
+                        Ok(result) if result.status.success() && model.is_file() => {
+                            update_task(
+                                &task_id,
+                                "SUCCEEDED",
+                                100,
+                                Some(format!("/api/generation/{task_id}/model")),
+                                None,
+                            )
+                            .await;
+                        }
+                        Ok(result) => {
+                            let detail = String::from_utf8_lossy(&result.stderr);
+                            let message = format!(
+                                "Не удалось встроить цветовую текстуру в GLB: {}",
+                                detail.trim()
+                            );
+                            eprintln!("Генерация {task_id} завершилась ошибкой: {message}");
+                            update_task(&task_id, "FAILED", 0, None, Some(message)).await;
+                        }
+                        Err(error) => {
+                            let message =
+                                format!("Не удалось запустить обработчик текстуры: {error}");
+                            eprintln!("Генерация {task_id} завершилась ошибкой: {message}");
+                            update_task(&task_id, "FAILED", 0, None, Some(message)).await;
+                        }
+                    }
                 }
             }
             Ok(output) => {
